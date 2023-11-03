@@ -30,8 +30,6 @@ class UserService {
         return { ...tokens, user: userDto };
     }
 
-    async login() {}
-
     async activate(activationLink) {
         const user = await UserModel.findOne({ activationLink });
         if (!user) {
@@ -39,6 +37,34 @@ class UserService {
         }
         user.isActivated = true;
         await user.save();
+    }
+
+    async login(email, password) {
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            throw ApiError.BadRequest('No user with this email was found');
+        }
+        const isPassEqual = await bcrypt.compare(password, user.password);
+        if (!isPassEqual) {
+            throw ApiError.BadRequest('Incorrect password');
+        }
+        // remove from model all what are not neccessary
+        const userDto = new UserDto(user);
+        const tokens = tokenService.generateToken({ ...userDto });
+        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+
+        return { ...tokens, user: userDto };
+    }
+
+    async logout(refreshToken) {
+        const token = await tokenService.removeToken(refreshToken);
+        return token;
+    }
+
+    async refresh(refreshToken) {
+        if (!refreshToken) {
+            throw ApiError.UnauthorizedError();
+        }
     }
 }
 
