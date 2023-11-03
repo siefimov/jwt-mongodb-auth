@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+const { Schema, model } = require('mongoose');
 
 const UserSchema = new Schema({
     email: {
@@ -7,7 +7,7 @@ const UserSchema = new Schema({
         required: true,
     },
     password: { type: String, required: true },
-    isActivate: { type: Boolean, default: false },
+    isActivated: { type: Boolean, default: false },
     activationLink: { type: String },
 });
 
