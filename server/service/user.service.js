@@ -28,6 +28,17 @@ class UserService {
 
         return { ...tokens, user: userDto };
     }
+
+    async login() {}
+
+    async activate(activationLink) {
+        const user = await UserModel.findOne({ activationLink });
+        if (!user) {
+            throw new Error('None corrected activation link');
+        }
+        user.isActivated = true;
+        await user.save();
+    }
 }
 
 module.exports = new UserService();
