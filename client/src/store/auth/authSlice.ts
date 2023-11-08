@@ -4,11 +4,13 @@ import { IUser } from '../../models/IUser';
 interface AuthState {
     user: IUser;
     isAuth: boolean;
+    isLoading: boolean;
 }
 
 const initialState: AuthState = {
     user: {} as IUser,
     isAuth: false,
+    isLoading: false,
 };
 
 const authSlice = createSlice({
@@ -21,9 +23,12 @@ const authSlice = createSlice({
         setUser: (state, action: PayloadAction<IUser>) => {
             state.user = action.payload;
         },
+        setLoading: (state, action: PayloadAction<boolean>) => {
+            state.isLoading = action.payload;
+        },
     },
 });
 
-export const { setAuth, setUser } = authSlice.actions;
+export const { setAuth, setUser, setLoading } = authSlice.actions;
 
 export default authSlice.reducer;
