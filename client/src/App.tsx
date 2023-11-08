@@ -1,35 +1,51 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { FC, useEffect, useState } from 'react';
+import { LoginForm } from './components/LoginForm';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { checkAuth, logout } from './store/auth/authThunks';
+import { IUser } from './models/IUser';
+import UserService from './services/UserService';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: FC = () => {
+    const user = useAppSelector((state) => state.users);
+    const [users, setUsers] = useState<IUser[]>([]);
+    const dispatch = useAppDispatch();
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    useEffect(() => {
+        if (localStorage.getItem('token')) {
+            dispatch(checkAuth());
+        }
+    }, [dispatch]);
 
-export default App
+    const getUsers = async () => {
+        try {
+            const response = await UserService.fetchUsers();
+            setUsers(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    if (user.isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!user.isAuth) {
+        return <LoginForm />;
+    }
+
+    return (
+        <div>
+            <h1>{user.isAuth ? `User is authorized ${user.user.email}` : 'Log In'}</h1>
+            <h1>{user.user.isActivated ? 'Account is activated' : 'Comfirm your account'}</h1>
+            <button onClick={() => dispatch(logout())}>Log Out</button>
+            <div>
+                <button onClick={getUsers}>The list of users</button>
+                {users.map((user) => (
+                    <div key={user.email}>{user.email}</div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default App;
