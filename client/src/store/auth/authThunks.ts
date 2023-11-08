@@ -1,8 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import AuthService from '../../services/AuthService';
-import { setAuth, setUser } from './authSlice';
+import { setAuth, setLoading, setUser } from './authSlice';
 import { IUser } from '../../models/IUser';
+import { AuthResponse } from '../../models/response/AuthResponse';
+import { API_URL } from '../../http';
 
 export const login = createAsyncThunk(
     'auth/login',
@@ -65,5 +67,25 @@ export const logout = createAsyncThunk('auth/logout', async (_, { dispatch }) =>
         }
 
         throw error;
+    }
+});
+
+export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { dispatch }) => {
+    dispatch(setLoading(true));
+    try {
+        const response = await axios.get<AuthResponse>(`${API_URL}/refresh`, { withCredentials: true });
+        localStorage.setItem('token', response.data.accessToken);
+        dispatch(setAuth(true));
+        dispatch(setUser(response.data.user));
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            console.log(error.response?.data.message);
+        }
+
+        if (error instanceof Error) {
+            console.log(error.message);
+        }
+    } finally {
+        dispatch(setLoading(false));
     }
 });
